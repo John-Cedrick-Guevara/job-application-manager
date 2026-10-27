@@ -3,15 +3,14 @@ from sqlalchemy.orm import Session
 from app.jobs import schema
 from app.jobs import model 
 
-import datetime
+from datetime import datetime, timezone
 
 def create_job(db: Session, job: schema.JobCreate) -> model.Job:
-    db_job = model.Job(
-        **job.dict()
-    )
+    db_job = model.Job(**job.model_dump())
+    
 
     if not job.posted_at:
-        db_job.posted_at = datetime.today()
+        db_job.posted_at = datetime.now(timezone.utc)
 
     db.add(db_job)
     db.commit()
@@ -31,7 +30,7 @@ def update_job(db: Session, job_id: int, job: schema.JobUpdate) -> model.Job | N
         return None
 
     # Update the fields of the db_job with the values from the job object
-    for key, value in job.dict(exclude_unset=True).items():
+    for key, value in job.model_dump(exclude_unset=True).items():
         setattr(db_job, key, value)
     
     db.commit()
